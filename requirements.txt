@@ -1,0 +1,34 @@
+# TEXT-TO-VIDEO GENERATOR - REQUIRED PACKAGES
+# 
+# WHAT THIS FILE DOES:
+# Lists all the Python libraries needed to run the project.
+# Think of it like a shopping list for your code!
+
+# Core AI and Machine Learning Libraries
+torch>=2.0.0                    # PyTorch: The brain of our AI (does the math)
+torchvision>=0.15.0             # Helps work with images and videos
+diffusers>=0.25.0               # Contains the text-to-video AI models
+transformers>=4.35.0            # Helps understand and process text
+accelerate>=0.20.0              # Makes AI training/generation faster
+
+# Image and Video Processing
+opencv-python>=4.8.0            # Works with videos (reads, writes, edits)
+pillow>=10.0.0                  # Works with images (opens, saves, edits)
+imageio>=2.31.0                 # Another tool for reading/writing videos
+imageio-ffmpeg>=0.4.9           # Helps compress and format videos properly
+
+# Utility Libraries
+numpy>=1.24.0                   # Does fast math with arrays of numbers
+scipy>=1.11.0                   # More advanced math functions
+tqdm>=4.65.0                    # Shows progress bars (so you know it's working!)
+
+# Optional but Recommended
+safetensors>=0.4.0              # Saves AI models safely
+huggingface-hub>=0.19.0         # Downloads AI models from the internet
+gradio>=4.0.0                   # Web interface for easy use (no coding needed)
+
+# INSTALLATION INSTRUCTIONS:
+# 1. Open your terminal/command prompt
+# 2. Navigate to your project folder
+# 3. Run: pip install -r requirements.txt
+# 4. Wait for everything to install (may take 5-10 minutes)

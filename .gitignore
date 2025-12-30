@@ -1,0 +1,39 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+
+# Project specific - Generated content (should NOT be in git)
+model_cache/
+generated_videos/
+gradio_outputs/
+*.mp4
+*_metadata.json
+
+# Pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Other
+.env
+.ipynb_checkpoints/
