@@ -1,52 +1,61 @@
-# 🎬 Text-to-Video Generator
+# Text-to-Video Generator
 
-A complete AI-powered application that converts text descriptions into short videos using diffusion models.
+An AI-powered application that converts text descriptions into short videos using diffusion models.
 
----
+## Features
 
-## 📚 What This Project Does
+- **Basic Generator** (main.py): Simple text-to-video generation
+- **Advanced Generator** (advanced_generator.py): Negative prompts, custom resolution, batch processing
+- **Web Interface** (web_interface.py): User-friendly browser-based UI with Gradio
 
-This project uses AI (specifically diffusion models) to generate videos from text. For example:
-- Input: "A cat playing with a ball of yarn"
-- Output: A 2-second video showing exactly that!
+## Quick Start
 
-**How it works (simple explanation):**
-1. You give the AI a text description
-2. The AI "imagines" what that would look like frame by frame
-3. The frames are combined into a video
+### Requirements
+- Python 3.8+
+- NVIDIA GPU (recommended) or CPU
 
----
+### Installation
 
-## 🗂️ Project Structure
-
-```
-text-to-video-generator/
-│
-├── main.py                  # Basic video generator (start here!)
-├── advanced_generator.py    # Advanced version with more features
-├── web_interface.py         # Web UI for easy use (no coding needed)
-├── requirements.txt         # List of packages to install
-├── README.md               # This file - project documentation
-│
-├── generated_videos/       # Your generated videos go here
-├── model_cache/            # Downloaded AI models stored here
-└── gradio_outputs/         # Videos from web interface
+1. Clone the repository:
+```bash
+git clone https://github.com/Sreeshanth25503/Text---Video-Generator.git
+cd Text---Video-Generator
 ```
 
----
-
-## 🚀 Getting Started
-
-### Step 1: Install Python
-Make sure you have Python 3.8 or higher installed.
-- Check: Open terminal and type `python --version`
-- Download from: https://www.python.org/downloads/
-
-### Step 2: Install Required Packages
-Open terminal in your project folder and run:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+
+### Usage
+
+**Basic version:**
+```bash
+python main.py
+```
+
+**Advanced version:**
+```bash
+python advanced_generator.py
+```
+
+**Web Interface:**
+```bash
+python web_interface.py
+```
+
+**Run all tests:**
+```bash
+python run_all.py
+```
+
+## Model
+
+Uses DAMO-VILAB's text-to-video-ms-1.7b model for video generation.
+
+## License
+
+MIT License - See LICENSE file for details
 
 **This will install:**
 - PyTorch (the AI brain)
