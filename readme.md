@@ -4,409 +4,365 @@ An AI-powered application that converts text descriptions into short videos usin
 
 ## Features
 
-- **Basic Generator** (main.py): Simple text-to-video generation
-- **Advanced Generator** (advanced_generator.py): Negative prompts, custom resolution, batch processing
-- **Web Interface** (web_interface.py): User-friendly browser-based UI with Gradio
+- **Text-to-Video Generation** - Create videos from text prompts
+- **Three Usage Modes**:
+  - Basic version (simple API)
+  - Advanced version (full control over parameters)
+  - Web interface (Gradio UI - no coding needed)
+- **Advanced Controls**:
+  - Negative prompts (specify what NOT to include)
+  - Custom resolution, frame count, and quality settings
+  - Seed control for reproducible results
+  - Metadata saving for generation tracking
+- **GPU Support** - CUDA acceleration for faster generation
+- **CPU Fallback** - Works on CPU (slower but compatible)
 
 ## Quick Start
 
-### Requirements
-- Python 3.8+
-- NVIDIA GPU (recommended) or CPU
-
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository**
 ```bash
 git clone https://github.com/Sreeshanth25503/Text---Video-Generator.git
 cd Text---Video-Generator
 ```
 
-2. Install dependencies:
+2. **Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Usage
 
-**Basic version:**
+#### Option 1: Web Interface (Easiest)
+```bash
+python web_interface.py
+```
+- Opens automatically in your browser at http://127.0.0.1:7860
+- No coding required - just type your prompt!
+
+#### Option 2: Basic Version
 ```bash
 python main.py
 ```
+- Simple API for quick video generation
+- Perfect for beginners
 
-**Advanced version:**
+#### Option 3: Advanced Version
 ```bash
 python advanced_generator.py
 ```
+- Full control over all parameters
+- Batch generation support
+- Quality comparison features
 
-**Web Interface:**
-```bash
-python web_interface.py
-```
-
-**Run all tests:**
+#### Option 4: Run All Tests
 ```bash
 python run_all.py
 ```
+- Tests all three versions automatically
+- Generates sample videos
 
-## Model
+## Example Usage
 
-Uses DAMO-VILAB's text-to-video-ms-1.7b model for video generation.
-
-## License
-
-MIT License - See LICENSE file for details
-
-**This will install:**
-- PyTorch (the AI brain)
-- Diffusers (contains video generation models)
-- Transformers (understands text)
-- OpenCV (works with videos)
-- And other helpful tools
-
-⏰ **Note:** Installation may take 10-15 minutes depending on your internet speed.
-
-### Step 3: Run Your First Video!
-
-**Option A: Command Line (Basic)**
-```bash
-python main.py
-```
-This will generate example videos automatically.
-
-**Option B: Web Interface (Easiest)**
-```bash
-pip install gradio  # If not already installed
-python web_interface.py
-```
-Then open the URL shown in your browser and start generating!
-
----
-
-## 💡 How to Use
-
-### Basic Usage (main.py)
-
+### Basic Generation
 ```python
 from main import TextToVideoGenerator
 
-# Create the generator
 generator = TextToVideoGenerator()
-
-# Generate a video
 generator.generate_video(
-    prompt="A dog running on the beach",
-    num_frames=16,           # 16 frames = ~2 seconds
-    num_inference_steps=25,  # Higher = better quality
+    prompt="A cat playing with a yarn ball",
+    num_frames=16,
+    num_inference_steps=25,
     output_path="my_video.mp4"
 )
 ```
 
-### Advanced Usage (advanced_generator.py)
+### Advanced Generation
+```python
+from advanced_generator import AdvancedTextToVideoGenerator
 
+generator = AdvancedTextToVideoGenerator()
+generator.generate_video(
+    prompt="A sunset over mountains, cinematic",
+    negative_prompt="blurry, low quality",
+    num_frames=16,
+    guidance_scale=7.5,
+    seed=42,
+    output_path="sunset.mp4"
+)
+```
+
+### Batch Generation
 ```python
 from advanced_generator import AdvancedTextToVideoGenerator
 
 generator = AdvancedTextToVideoGenerator()
 
-# Generate with negative prompt (tell AI what to avoid)
-generator.generate_video(
-    prompt="A beautiful sunset over mountains",
-    negative_prompt="blurry, low quality, distorted",
-    num_frames=16,
-    guidance_scale=9.0,  # How strictly to follow prompt
-    seed=42,             # For reproducible results
-    output_path="sunset.mp4"
-)
-
-# Generate multiple videos at once
 prompts = [
-    "A cat sleeping",
-    "A car driving",
-    "Birds flying"
+    "A cat playing with a yarn ball",
+    "A sunset over mountains",
+    "A robot dancing in a city"
 ]
-generator.batch_generate(prompts, output_folder="my_videos")
 
-# Compare different quality settings
-generator.compare_settings(
-    prompt="A rocket launching",
+videos = generator.batch_generate(
+    prompts,
+    output_folder="batch_videos",
+    num_frames=16,
+    guidance_scale=7.5
+)
+```
+
+### Compare Quality Settings
+```python
+from advanced_generator import AdvancedTextToVideoGenerator
+
+generator = AdvancedTextToVideoGenerator()
+
+results = generator.compare_settings(
+    prompt="A beautiful sunset",
     output_folder="comparison"
 )
 ```
 
-### Web Interface Usage
+## Parameters Explained
 
-1. Run: `python web_interface.py`
-2. Open browser (automatically opens)
-3. Fill in the form:
-   - **Prompt**: What you want to see
-   - **Negative Prompt**: What to avoid (optional)
-   - **Settings**: Adjust quality and length
-4. Click "Generate Video"
-5. Wait 1-3 minutes
-6. Download your video!
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `prompt` | What you want in the video | Required | Text |
+| `negative_prompt` | What to avoid | None | Text |
+| `num_frames` | Number of frames (video length) | 8 | 8-24 |
+| `num_inference_steps` | Quality iterations | 20 | 10-50 |
+| `guidance_scale` | How strictly to follow prompt | 7.5 | 1.0-10.0 |
+| `height` / `width` | Video resolution in pixels | 256 | 256-512 |
+| `seed` | For reproducible results | Random | Integer |
+| `fps` | Frames per second | 8 | 8-24 |
 
----
+## System Requirements
 
-## 🎛️ Parameter Guide
+- **Python**: 3.8 or higher
+- **RAM**: 8GB minimum (16GB recommended)
+- **GPU**: NVIDIA GPU with CUDA 11.8+ (4GB VRAM minimum)
+- **CPU**: Works without GPU but ~5-10x slower
+- **Storage**: 7GB for model cache + space for generated videos
 
-### Essential Parameters
+## Performance Benchmarks
 
-| Parameter | What It Does | Good Values | Effect |
-|-----------|--------------|-------------|--------|
-| **prompt** | Your text description | Any text | What appears in video |
-| **negative_prompt** | What to avoid | "blurry, low quality" | Improves quality |
-| **num_frames** | Video length | 8-32 | More = longer video |
-| **num_inference_steps** | Quality iterations | 15-50 | More = better quality |
-| **guidance_scale** | Follow prompt strength | 7-12 | Higher = more accurate |
-| **seed** | Reproducibility | Any number | Same seed = same video |
+| Setting | Time | Quality | GPU Memory |
+|---------|------|---------|-----------|
+| Fast (8 frames, 15 steps) | 30-45s | Good | 2-3GB |
+| Balanced (16 frames, 25 steps) | 1.5-2min | Excellent | 3-4GB |
+| High Quality (24 frames, 50 steps) | 5-7min | Very High | 4GB+ |
 
-### Understanding the Numbers
-
-**num_frames:**
-- 8 frames = ~1 second (very short)
-- 16 frames = ~2 seconds (standard)
-- 24 frames = ~3 seconds (longer)
-- 32 frames = ~4 seconds (maximum)
-
-**num_inference_steps:**
-- 15 steps = Fast but lower quality
-- 25 steps = Good balance (recommended)
-- 50 steps = Best quality but slow
-
-**guidance_scale:**
-- 7.0 = More creative/loose interpretation
-- 9.0 = Balanced (recommended)
-- 12.0 = Very strict to prompt
-- 15.0 = Maximum adherence
-
----
-
-## 🎯 Example Prompts
-
-### Good Prompts (Clear and Descriptive)
-✅ "A cat playing with a ball of yarn, realistic style"
-✅ "Sunset over the ocean, cinematic, golden hour"
-✅ "A robot dancing in a futuristic city at night"
-✅ "Flowers blooming in a garden, time-lapse style"
-✅ "Waves crashing on a rocky beach, slow motion"
-
-### Avoid Vague Prompts
-❌ "Something cool"
-❌ "A video"
-❌ "Nice scenery"
-
-### Tips for Better Results
-1. **Be specific**: Include details like style, time of day, mood
-2. **Add style keywords**: "cinematic", "realistic", "cartoon style"
-3. **Use negative prompts**: Add "blurry, low quality, distorted"
-4. **Keep it simple**: 1-2 sentences work best
-5. **Mention motion**: "walking", "flying", "spinning" helps
-
----
-
-## ⚙️ Technical Details
-
-### What Are Diffusion Models?
-
-**Simple Explanation:**
-Imagine an artist who:
-1. Starts with random noise (like TV static)
-2. Gradually removes the noise while adding details
-3. Continues until a clear image/video emerges
-
-That's how diffusion models work! They "denoise" random pixels into meaningful content guided by your text.
-
-### The AI Pipeline
+## File Structure
 
 ```
-Your Text → Text Encoder → Diffusion Model → Video Frames → MP4 File
+Text---Video-Generator/
+├── main.py                 # Basic generator
+├── advanced_generator.py   # Advanced features
+├── web_interface.py        # Gradio web UI
+├── run_all.py             # Test suite
+├── requirements.txt        # Python dependencies
+├── README.md              # This file
+├── LICENSE                # MIT License
+├── .gitignore             # Git configuration
+└── .github/               # GitHub templates
+    ├── CONTRIBUTING.md
+    ├── SECURITY.md
+    └── ISSUE_TEMPLATE/
+        └── bug_report.md
 ```
 
-1. **Text Encoder**: Understands your prompt
-2. **Diffusion Model**: Creates frames from noise
-3. **VAE Decoder**: Converts AI data to viewable images
-4. **Video Export**: Combines frames into MP4
+## Troubleshooting
 
-### Model Information
-
-**Default Model:** `damo-vilab/text-to-video-ms-1.7b`
-- Size: ~7 GB
-- Resolution: 256x256 pixels
-- Length: Up to 32 frames (~4 seconds)
-- Quality: Good for demonstrations and testing
-
----
-
-## 🔧 Troubleshooting
-
-### "CUDA out of memory"
-**Problem:** Your GPU doesn't have enough memory
+### Issue: "CUDA Out of Memory" Error
 **Solution:**
-```python
-# Reduce these values:
-num_frames=8          # Instead of 16
-height=256, width=256 # Don't go higher
-```
+- Reduce `num_frames` (try 8 instead of 16)
+- Reduce `num_inference_steps` (try 15 instead of 25)
+- Use `height=256, width=256` instead of larger values
+- Close other GPU-consuming applications
 
-### "Model download is slow"
-**Problem:** Large model files (7GB)
-**Solution:** Be patient! First download takes time. It's saved for next use.
+### Issue: Slow Video Generation
+**Solution:**
+- If on CPU, consider using a GPU-enabled machine
+- Reduce quality settings for faster results
+- Use smaller frame counts for faster generation
 
-### "Generated video is blurry"
-**Solutions:**
-1. Increase `num_inference_steps` to 50
-2. Add negative prompt: "blurry, low quality"
-3. Increase `guidance_scale` to 11-12
+### Issue: Model Download Fails
+**Solution:**
+- First run downloads ~7GB model (requires patience and stable internet)
+- Model is cached in `model_cache` folder
+- Subsequent runs will be much faster
+- Check your internet connection
 
-### "Generation takes too long"
-**Speed it up:**
-```python
-num_frames=8           # Fewer frames
-num_inference_steps=15 # Fewer steps
-# Trade quality for speed
-```
-
-### "ModuleNotFoundError"
-**Problem:** Missing package
+### Issue: ImportError - Module Not Found
 **Solution:**
 ```bash
+# Make sure all requirements are installed
 pip install -r requirements.txt
-# Or install specific package:
-pip install diffusers torch
+
+# If still failing, try upgrading pip
+pip install --upgrade pip
 ```
 
+## Model Information
+
+- **Model Name**: DAMO ViLab Text-to-Video MS 1.7B
+- **Source**: Hugging Face Model Hub
+- **Download Size**: ~7GB
+- **License**: Model-specific (see Hugging Face card)
+- **Citation**: DAMO ViLab team
+
+## API Reference
+
+### TextToVideoGenerator
+
+```python
+from main import TextToVideoGenerator
+
+generator = TextToVideoGenerator(model_name="damo-vilab/text-to-video-ms-1.7b")
+
+result = generator.generate_video(
+    prompt="Your text prompt",
+    num_frames=8,
+    num_inference_steps=15,
+    guidance_scale=7.5,
+    output_path="output.mp4"
+)
+
+# Generate multiple videos
+prompts = ["Video 1", "Video 2", "Video 3"]
+videos = generator.generate_multiple_videos(
+    prompts,
+    output_folder="generated_videos"
+)
+```
+
+### AdvancedTextToVideoGenerator
+
+```python
+from advanced_generator import AdvancedTextToVideoGenerator
+
+generator = AdvancedTextToVideoGenerator(
+    model_name="damo-vilab/text-to-video-ms-1.7b",
+    cache_dir="./model_cache"
+)
+
+# Single video with all options
+result = generator.generate_video(
+    prompt="Your text prompt",
+    negative_prompt="What to avoid",
+    num_frames=16,
+    height=256,
+    width=256,
+    num_inference_steps=25,
+    guidance_scale=9.0,
+    fps=8,
+    output_path="output.mp4",
+    seed=42,
+    save_metadata=True
+)
+
+# Batch generation
+results = generator.batch_generate(
+    prompts=["Video 1", "Video 2"],
+    output_folder="batch_videos",
+    num_frames=16
+)
+
+# Compare quality settings
+comparison = generator.compare_settings(
+    prompt="Your text prompt",
+    output_folder="comparison"
+)
+
+# Get generation history
+history = generator.get_generation_history()
+```
+
+### VideoGeneratorInterface (Web)
+
+```bash
+python web_interface.py
+# Opens web interface in browser at http://127.0.0.1:7860
+```
+
+Features:
+- Text input for prompts
+- Negative prompt support
+- Slider controls for all parameters
+- Real-time status updates
+- Video preview in browser
+- Automatic seed randomization option
+
+## Common Prompts
+
+Here are some effective prompts to try:
+
+**Nature & Landscapes**
+- "A beautiful sunset over mountains, cinematic lighting"
+- "Ocean waves crashing on a beach, sunny day"
+- "Forest with green trees and sunlight filtering through"
+
+**Animals**
+- "A cat playing with a yarn ball, photorealistic"
+- "A dog running through a field, golden hour lighting"
+- "Birds flying through clouds, cinematic view"
+
+**Abstract & Art**
+- "Colorful gradient animation, smooth transitions"
+- "Abstract geometric shapes moving, neon colors"
+- "Liquid flowing and morphing, trippy visual effects"
+
+**Technology**
+- "Robot dancing in futuristic city with neon lights"
+- "Holographic data visualization, blue and purple"
+- "Space station orbiting Earth, stars in background"
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](.github/CONTRIBUTING.md) for detailed guidelines on how to contribute.
+
+## Security
+
+For security concerns and responsible disclosure, please see [SECURITY.md](.github/SECURITY.md)
+
+## License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you use this project in your research or work, please cite:
+
+```bibtex
+@software{text_to_video_generator_2025,
+  title = {Text-to-Video Generator},
+  author = {Sreeshanth},
+  year = {2025},
+  url = {https://github.com/Sreeshanth25503/Text---Video-Generator}
+}
+```
+
+## Support & Feedback
+
+- **Report Bugs**: Open an issue on [GitHub Issues](https://github.com/Sreeshanth25503/Text---Video-Generator/issues)
+- **Ask Questions**: Use [GitHub Discussions](https://github.com/Sreeshanth25503/Text---Video-Generator/discussions)
+- **Request Features**: Create a feature request issue
+
+## Acknowledgments
+
+- **DAMO ViLab** for the excellent text-to-video diffusion model
+- **Hugging Face** for model hosting and the diffusers library
+- **PyTorch Team** for the deep learning framework
+- **Gradio Team** for the web interface framework
+
+## Disclaimer
+
+This project is for educational and research purposes. Generated videos should be used responsibly and in compliance with applicable laws and regulations. Users are responsible for ensuring their use of generated content does not violate any rights or policies.
+
 ---
 
-## 🖥️ System Requirements
+**Made with ❤️ for the AI community**
 
-### Minimum Requirements
-- **CPU:** Modern multi-core processor
-- **RAM:** 8 GB
-- **Storage:** 15 GB free space
-- **GPU:** Optional but recommended
-- **OS:** Windows, macOS, or Linux
-
-### Recommended for Best Performance
-- **CPU:** Intel i7/AMD Ryzen 7 or better
-- **RAM:** 16 GB or more
-- **GPU:** NVIDIA GPU with 8GB+ VRAM (RTX 3070, 4060, etc.)
-- **Storage:** 20 GB free space (SSD preferred)
-
-### Performance Expectations
-
-**With GPU (NVIDIA RTX 3070):**
-- 16 frames, 25 steps: ~30 seconds
-
-**Without GPU (CPU only):**
-- 16 frames, 25 steps: ~5-10 minutes
-
----
-
-## 📖 Learning Resources
-
-### Understanding the Code
-
-Each Python file has extensive comments explaining:
-- What each function does
-- What each parameter means
-- Why we make certain choices
-
-**Start here:**
-1. Open `main.py`
-2. Read the comments (text after `#`)
-3. Run the code
-4. Experiment with parameters
-
-### Key Concepts to Learn
-
-1. **PyTorch**: The math library that powers AI
-2. **Diffusers**: Library with pre-trained models
-3. **Transformers**: Helps AI understand text
-4. **Tensors**: Multi-dimensional arrays (like matrices)
-
-### Further Reading
-- [Diffusers Documentation](https://huggingface.co/docs/diffusers)
-- [PyTorch Tutorials](https://pytorch.org/tutorials/)
-- [Stable Diffusion Guide](https://stable-diffusion-art.com/)
-
----
-
-## 🎓 Project Ideas to Try
-
-### Beginner
-1. Generate videos from 10 different prompts
-2. Compare fast vs slow generation settings
-3. Try different styles (realistic, cartoon, cinematic)
-
-### Intermediate
-1. Create a video series with similar prompts
-2. Build a custom prompt generator
-3. Add video post-processing (filters, effects)
-
-### Advanced
-1. Fine-tune model on custom dataset
-2. Create longer videos by stitching frames
-3. Add audio generation
-4. Build a full web application with database
-
----
-
-## 📝 Notes and Tips
-
-### Best Practices
-- Start with default settings
-- Use negative prompts for quality
-- Save successful prompts for reuse
-- Generate multiple versions and pick the best
-
-### Common Mistakes to Avoid
-❌ Setting num_frames too high (slow + memory issues)
-❌ Forgetting negative prompts
-❌ Using vague descriptions
-❌ Not setting a seed for reproducibility
-
-### Saving Time
-- Use `seed` parameter to recreate good results
-- Save metadata files (turned on by default)
-- Start with low settings to test prompts
-- Use batch generation for multiple videos
-
----
-
-## 🤝 Contributing & Feedback
-
-This is a learning project! Feel free to:
-- Experiment and modify the code
-- Add new features
-- Share your generated videos
-- Document what you learn
-
----
-
-## 📜 License
-
-This project uses open-source models and libraries:
-- Model: DAMO-VILAB (Apache 2.0)
-- Code: Educational use
-
----
-
-## 🆘 Getting Help
-
-If you're stuck:
-1. Read error messages carefully
-2. Check the Troubleshooting section above
-3. Review the code comments
-4. Try simpler settings first
-5. Search the error on Google
-
----
-
-## 🎉 Have Fun!
-
-The best way to learn is by experimenting. Try different prompts, play with settings, and see what you can create!
-
-**Remember:** Your first videos might not be perfect, and that's okay! Even professional AI researchers iterate many times to get good results.
-
-Happy generating! 🎬✨
+Last Updated: December 2025
