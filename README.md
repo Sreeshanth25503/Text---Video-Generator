@@ -199,6 +199,4 @@ MIT License - See [LICENSE](LICENSE)
 
 ---
 
-**Made with  for the AI community**
-
 Last Updated: December 2025
