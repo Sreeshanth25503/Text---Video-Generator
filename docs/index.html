@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text-to-Video Generator — AI Demo</title>
+  <meta name="description" content="Generate short videos from any text description using AI diffusion models. Built with PyTorch, HuggingFace Diffusers, and Gradio." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens ── */
+    :root {
+      --bg:        #09090b;
+      --surface:   #111113;
+      --border:    rgba(255,255,255,0.08);
+      --primary:   #8b5cf6;
+      --primary-g: linear-gradient(135deg, #7c3aed, #a855f7);
+      --text:      #f4f4f5;
+      --muted:     #71717a;
+      --accent:    #c4b5fd;
+      --r:         14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Glow blobs ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.18;
+    }
+    .blob-1 { width: 600px; height: 600px; background: #7c3aed; top: -200px; left: -200px; }
+    .blob-2 { width: 500px; height: 500px; background: #a855f7; bottom: -150px; right: -150px; }
+
+    /* ── Layout ── */
+    .container { max-width: 960px; margin: auto; padding: 0 1.5rem; position: relative; z-index: 1; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(18px);
+      background: rgba(9,9,11,0.8);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 0;
+    }
+    nav .inner {
+      max-width: 960px;
+      margin: auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 7rem 0 5rem;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 99px;
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.3);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 1.75rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .hero h1 .grad {
+      background: var(--primary-g);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .sub {
+      margin: 1.25rem auto 0;
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+    .cta-group {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2.25rem;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn {
+      padding: 0.75rem 1.6rem;
+      border-radius: 99px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-primary {
+      background: var(--primary-g);
+      color: #fff;
+      border: none;
+      box-shadow: 0 0 30px rgba(139,92,246,0.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(139,92,246,0.5); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: rgba(139,92,246,0.5); transform: translateY(-2px); }
+
+    /* ── Demo preview ── */
+    .demo-preview {
+      margin: 4rem auto 0;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+      animation: fadeUp 0.7s 0.4s ease both;
+    }
+    .demo-bar {
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .demo-bar .url {
+      margin-left: 0.5rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-family: monospace;
+    }
+    .demo-content { padding: 1.5rem; }
+    .demo-prompt {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .demo-prompt .label { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+    .demo-prompt .value {
+      color: var(--accent);
+      font-size: 0.88rem;
+      font-style: italic;
+    }
+    .demo-video-placeholder {
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(168,85,247,0.08));
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      border: 1px dashed rgba(139,92,246,0.3);
+    }
+    .play-icon {
+      width: 56px; height: 56px;
+      background: var(--primary-g);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 0 30px rgba(139,92,246,0.4);
+    }
+    .demo-video-placeholder p { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── Features ── */
+    section { padding: 5rem 0; }
+    .section-label {
+      display: block;
+      color: var(--primary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .section-sub { color: var(--muted); max-width: 480px; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .feature-card:hover {
+      border-color: rgba(139,92,246,0.4);
+      transform: translateY(-3px);
+    }
+    .feature-icon {
+      font-size: 1.6rem;
+      margin-bottom: 0.75rem;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .feature-card p { color: var(--muted); font-size: 0.875rem; }
+
+    /* ── Stack ── */
+    .stack-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+    .stack-chip {
+      padding: 0.5rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      font-size: 0.85rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ── How it works ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2.5rem;
+      counter-reset: steps;
+    }
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.5rem;
+      position: relative;
+    }
+    .step-num {
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--primary-g);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 0.75rem;
+    }
+    .step h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.35rem; }
+    .step p  { color: var(--muted); font-size: 0.85rem; }
+
+    /* ── CTA section ── */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(168,85,247,0.06));
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 20px;
+      padding: 4rem 2rem;
+      margin-bottom: 5rem;
+    }
+    .cta-section h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+    .cta-section p  { color: var(--muted); margin-bottom: 2rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      position: relative;
+      z-index: 1;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hero { padding: 5rem 0 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="inner">
+    <div class="nav-logo">🎬 <span>Text-to-Video</span> Generator</div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#stack">Tech Stack</a></li>
+      <li><a href="https://github.com/Sreeshanth25503/Text---Video-Generator" target="_blank">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="container">
+  <section class="hero">
+    <div class="badge">🤖 AI-Powered · Open Source</div>
+    <h1>Turn text into<br/><span class="grad">short videos</span> with AI</h1>
+    <p class="sub">
+      Type any description and watch an AI diffusion model generate a video in seconds.
+      Built with PyTorch, HuggingFace Diffusers &amp; Gradio.
+    </p>
+    <div class="cta-group">
+      <a class="btn btn-primary"
+         href="https://huggingface.co/spaces/Sreeshanth25503/text-to-video-generator"
+         target="_blank">
+        ⚡ Try Live Demo
+      </a>
+      <a class="btn btn-outline"
+         href="https://github.com/Sreeshanth25503/Text---Video-Generator"
+         target="_blank">
+        ⭐ View on GitHub
+      </a>
+    </div>
+
+    <!-- Browser mockup -->
+    <div class="demo-preview">
+      <div class="demo-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="url">localhost:7860 — Text-to-Video Generator</span>
+      </div>
+      <div class="demo-content">
+        <div class="demo-prompt">
+          <span class="label">Prompt:</span>
+          <span class="value">"A golden retriever running on a sunny beach, cinematic slow motion"</span>
+        </div>
+        <div class="demo-video-placeholder">
+          <div class="play-icon">▶</div>
+          <p>AI-generated video · 256×256 · 2 seconds</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<hr />
+
+<!-- Features -->
+<div class="container">
+  <section id="features">
+    <span class="section-label">What it can do</span>
+    <h2 class="section-title">Three ways to generate</h2>
+    <p class="section-sub">Choose the interface that suits you — from a single Python call to a full browser UI.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🖥️</div>
+        <h3>Web Interface</h3>
+        <p>A clean Gradio browser app. Just type a prompt and click generate — no coding needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <h3>Advanced Generator</h3>
+        <p>Full control: negative prompts, custom resolution, seed, metadata saving, and batch generation.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>Python API</h3>
+        <p>Import <code>TextToVideoGenerator</code> directly into any Python script or notebook.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎛️</div>
+        <h3>Full Parameter Control</h3>
+        <p>Tune frames, inference steps, guidance scale, FPS, resolution, and random seed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <h3>Auto Metadata</h3>
+        <p>Every generated video is saved with a JSON metadata file so you can reproduce it exactly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h3>GPU Optimised</h3>
+        <p>CUDA acceleration, fp16 precision, model CPU offloading, and VAE slicing for 4GB GPUs.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<hr />
+
+<!-- How it works -->
+<div class="container">
+  <section id="how-it-works">
+    <span class="section-label">Under the hood</span>
+    <h2 class="section-title">How it works</h2>
+    <p class="section-sub">A diffusion model turns your text into video frames through an iterative denoising process.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Text Encoding</h3>
+        <p>Your prompt is tokenised and converted to vector embeddings by a CLIP text encoder.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Diffusion</h3>
+        <p>Starting from random noise, the DPM-Solver scheduler iteratively denoises the video frames using your prompt as a guide.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>VAE Decode</h3>
+        <p>A Variational Autoencoder converts the latent frames into pixel-space images.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>MP4 Export</h3>
+        <p>Individual frames are assembled and saved as an MP4 at 8 fps using <code>imageio-ffmpeg</code>.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<hr />
+
+<!-- Tech Stack -->
+<div class="container">
+  <section id="stack">
+    <span class="section-label">Built with</span>
+    <h2 class="section-title">Tech Stack</h2>
+    <p class="section-sub">Open-source libraries powering the generation pipeline.</p>
+
+    <div class="stack-grid">
+      <span class="stack-chip">🔥 PyTorch 2.5</span>
+      <span class="stack-chip">🤗 Diffusers 0.36</span>
+      <span class="stack-chip">🤗 Transformers</span>
+      <span class="stack-chip">🖥️ Gradio 6</span>
+      <span class="stack-chip">⚡ CUDA 12.1</span>
+      <span class="stack-chip">🖼️ imageio-ffmpeg</span>
+      <span class="stack-chip">🧮 NumPy</span>
+      <span class="stack-chip">📊 tqdm</span>
+      <span class="stack-chip">🤗 HuggingFace Hub</span>
+      <span class="stack-chip">🛡️ safetensors</span>
+    </div>
+  </section>
+</div>
+
+<hr />
+
+<!-- CTA -->
+<div class="container">
+  <section class="cta-section">
+    <h2>Try it live or run it locally</h2>
+    <p>Free GPU on HuggingFace Spaces, or clone and run on your own machine in 3 commands.</p>
+    <div class="cta-group">
+      <a class="btn btn-primary"
+         href="https://huggingface.co/spaces/Sreeshanth25503/text-to-video-generator"
+         target="_blank">
+        ⚡ Open Live Demo
+      </a>
+      <a class="btn btn-outline"
+         href="https://github.com/Sreeshanth25503/Text---Video-Generator"
+         target="_blank">
+        📦 Clone on GitHub
+      </a>
+    </div>
+  </section>
+</div>
+
+<!-- Footer -->
+<footer>
+  <p>
+    Built by <a href="https://github.com/Sreeshanth25503">Sreeshanth</a> ·
+    Model: <a href="https://huggingface.co/damo-vilab/text-to-video-ms-1.7b" target="_blank">damo-vilab/text-to-video-ms-1.7b</a> ·
+    <a href="https://github.com/Sreeshanth25503/Text---Video-Generator" target="_blank">GitHub</a> ·
+    MIT License
+  </p>
+</footer>
+
+</body>
+</html>
