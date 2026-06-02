@@ -46,7 +46,7 @@ class TextToVideoGenerator:
         # SIMPLE: This makes the AI use less computer memory
         if self.device == "cuda":
             self.pipe.enable_model_cpu_offload()
-            self.pipe.enable_vae_slicing()
+            self.pipe.vae.enable_slicing()
         
         print("[OK] Model loaded successfully!")
     

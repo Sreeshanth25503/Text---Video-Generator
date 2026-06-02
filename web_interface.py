@@ -57,7 +57,7 @@ class VideoGeneratorInterface:
             # Memory optimizations for GPU
             if self.device == "cuda":
                 self.pipe.enable_model_cpu_offload()
-                self.pipe.enable_vae_slicing()
+                self.pipe.vae.enable_slicing()
             
             print("[OK] Model loaded successfully!")
             
